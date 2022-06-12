@@ -58,11 +58,12 @@ def process_file(path, file, files):
     file_path = path + "\\" + file
     if (isfile(file_path)):
         new_file = File(file_path)
-        key = new_file.name
-        if (key not in files):
-            files[key] = [new_file]
-        else:
-            files[key].append(new_file)
+        if (new_file.valid_date):
+            key = new_file.name
+            if (key not in files):
+                files[key] = [new_file]
+            else:
+                files[key].append(new_file)
     else:
         for child in os.listdir(file_path):
             files = process_file(file_path, child, files)
@@ -100,6 +101,15 @@ def delete_suffixed(files, suffix, remove = False):
                         os.remove(file)
     print("Found " + str(len(duplicates)) + " duplicates.")
 
+def process_duplicates(files, target):
+    for values in files:
+        if len(values) == 2:
+            if values[0].size >= values[1].size:
+                move_file(values[0].filepath, target)
+                os.remove(values[1].filepath)
+            else:
+                move_file(values[1].filepath, target)
+                os.remove(values[0].filepath)
 
 def main():
     parser = argparse.ArgumentParser(description='Organize pictures into dated folders')
@@ -109,6 +119,12 @@ def main():
     files = {}
     for file in os.listdir(path):
         files = process_file(path, file, files)
+    duplicates = []
+    for key, values in files.items():
+        if len(values) > 1:
+            duplicates.append(values)
+    print("Found " + str(len(duplicates)) + " duplicates.")
+    process_duplicates(duplicates, path + "\\unsorted")
     return
 
 if __name__ == '__main__':
